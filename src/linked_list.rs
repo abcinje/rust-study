@@ -1,11 +1,12 @@
+use std::mem;
 struct Node {
     value: i32,
     next: Option<Box<Node>>,
 }
 
 impl Node {
-    fn new(value: i32) -> Self {
-        Self { value, next: None }
+    fn new(value: i32, next: Option<Box<Node>>) -> Self {
+        Self { value, next }
     }
 }
 
@@ -16,7 +17,7 @@ pub struct LinkedList {
 
 impl LinkedList {
     pub fn new() -> Self {
-        Self { head: Node::new(0), len: 0 }
+        Self { head: Node::new(0, None), len: 0 }
     }
 
     pub fn from(slice: &[i32]) -> Self {
@@ -35,13 +36,39 @@ impl LinkedList {
         self.len
     }
 
+    pub fn push_front(&mut self, value: i32) {
+        let mut next = None;
+        mem::swap(&mut next, &mut self.head.next);
+
+        let node = Node::new(value, next);
+        self.head.next = Some(Box::new(node));
+        self.len += 1;
+    }
+
     pub fn push_back(&mut self, value: i32) {
         let mut curr = &mut self.head;
         while let Some(_) = curr.next {
             curr = curr.next.as_mut().unwrap();
         }
-        curr.next = Some(Box::new(Node::new(value)));
+        curr.next = Some(Box::new(Node::new(value, None)));
         self.len += 1;
+    }
+
+    pub fn pop_front(&mut self) -> Option<i32> {
+        if self.is_empty() {
+            return None;
+        }
+
+        let mut next = None;
+        mem::swap(&mut next, &mut self.head.next.as_mut().unwrap().next);
+
+        let mut node = None;
+        mem::swap(&mut node, &mut self.head.next);
+
+        self.head.next = next;
+        self.len -= 1;
+
+        Some(node.unwrap().value)
     }
 
     pub fn pop_back(&mut self) -> Option<i32> {
