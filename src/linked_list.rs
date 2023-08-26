@@ -1,29 +1,31 @@
+use std::fmt;
 use std::mem;
-struct Node {
-    value: i32,
-    next: Option<Box<Node>>,
+
+struct Node<T> {
+    value: Option<T>,
+    next: Option<Box<Node<T>>>,
 }
 
-impl Node {
-    fn new(value: i32, next: Option<Box<Node>>) -> Self {
+impl<T> Node<T> {
+    fn new(value: Option<T>, next: Option<Box<Node<T>>>) -> Self {
         Self { value, next }
     }
 }
 
-pub struct LinkedList {
-    head: Node, // dummy
+pub struct LinkedList<T> {
+    head: Node<T>,  // dummy
     len: usize,
 }
 
-impl LinkedList {
+impl<T: Clone + fmt::Debug> LinkedList<T> {
     pub fn new() -> Self {
-        Self { head: Node::new(0, None), len: 0 }
+        Self { head: Node::new(None, None), len: 0 }
     }
 
-    pub fn from(slice: &[i32]) -> Self {
+    pub fn from(slice: &[T]) -> Self {
         let mut list = Self::new();
         for i in slice {
-            list.push_back(*i);
+            list.push_back(i.clone());
         }
         list
     }
@@ -36,25 +38,25 @@ impl LinkedList {
         self.len
     }
 
-    pub fn push_front(&mut self, value: i32) {
+    pub fn push_front(&mut self, value: T) {
         let mut next = None;
         mem::swap(&mut next, &mut self.head.next);
 
-        let node = Node::new(value, next);
+        let node = Node::new(Some(value), next);
         self.head.next = Some(Box::new(node));
         self.len += 1;
     }
 
-    pub fn push_back(&mut self, value: i32) {
+    pub fn push_back(&mut self, value: T) {
         let mut curr = &mut self.head;
         while let Some(_) = curr.next {
             curr = curr.next.as_mut().unwrap();
         }
-        curr.next = Some(Box::new(Node::new(value, None)));
+        curr.next = Some(Box::new(Node::new(Some(value), None)));
         self.len += 1;
     }
 
-    pub fn pop_front(&mut self) -> Option<i32> {
+    pub fn pop_front(&mut self) -> Option<T> {
         if self.is_empty() {
             return None;
         }
@@ -68,10 +70,10 @@ impl LinkedList {
         self.head.next = next;
         self.len -= 1;
 
-        Some(node.unwrap().value)
+        Some(node.unwrap().value.unwrap())
     }
 
-    pub fn pop_back(&mut self) -> Option<i32> {
+    pub fn pop_back(&mut self) -> Option<T> {
         if self.is_empty() {
             return None;
         }
@@ -83,11 +85,11 @@ impl LinkedList {
             curr = curr.next.as_mut().unwrap();
         }
 
-        let result = Some(curr.next.as_ref().unwrap().value);
-        curr.next = None;
+        let mut node = None;
+        mem::swap(&mut node, &mut curr.next);
         self.len -= 1;
 
-        result
+        Some(node.unwrap().value.unwrap())
     }
 
     pub fn print(&self) {
@@ -96,7 +98,7 @@ impl LinkedList {
         print!("[");
         while let Some(_) = curr.next {
             curr = curr.next.as_ref().unwrap();
-            print!("{}, ", curr.value);
+            print!("{:?}, ", curr.value.as_ref().unwrap());
         }
         println!("]");
     }
