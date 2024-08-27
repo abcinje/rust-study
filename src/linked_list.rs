@@ -1,5 +1,4 @@
-use std::fmt;
-use std::mem;
+use std::{fmt, mem};
 
 struct Node<T> {
     value: Option<T>,
@@ -13,21 +12,13 @@ impl<T> Node<T> {
 }
 
 pub struct LinkedList<T> {
-    head: Node<T>,  // dummy
+    head: Node<T>,
     len: usize,
 }
 
-impl<T: Clone + fmt::Debug> LinkedList<T> {
+impl<T> LinkedList<T> {
     pub fn new() -> Self {
         Self { head: Node::new(None, None), len: 0 }
-    }
-
-    pub fn from(slice: &[T]) -> Self {
-        let mut list = Self::new();
-        for i in slice {
-            list.push_back(i.clone());
-        }
-        list
     }
 
     pub fn is_empty(&self) -> bool {
@@ -91,15 +82,28 @@ impl<T: Clone + fmt::Debug> LinkedList<T> {
 
         Some(node.unwrap().value.unwrap())
     }
+}
 
-    pub fn print(&self) {
+impl<T: Clone> From<&[T]> for LinkedList<T> {
+    fn from(slice: &[T]) -> Self {
+        let mut list = Self::new();
+        for i in slice {
+            list.push_back(i.clone());
+        }
+        list
+    }
+}
+
+impl<T: fmt::Debug> fmt::Debug for LinkedList<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut output = String::from("[");
         let mut curr = &self.head;
-
-        print!("[");
         while let Some(_) = curr.next {
             curr = curr.next.as_ref().unwrap();
-            print!("{:?}, ", curr.value.as_ref().unwrap());
+            output += &format!("{:?}, ", curr.value.as_ref().unwrap());
         }
-        println!("]");
+        output += "]";
+
+        writeln!(f, "{output}")
     }
 }
